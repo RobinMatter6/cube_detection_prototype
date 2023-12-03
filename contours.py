@@ -117,6 +117,7 @@ def process(frame):
     contours = blue_contours + red_contours + yellow_contours
     calc_positions(contours)
 
+
 cap = cv.VideoCapture('assets/pren_cube_01.mp4')
 
 # pren_cube_01.mp4
@@ -138,19 +139,19 @@ cv.imshow('output', frame)
 cv.waitKey()
 
 cap.set(1, 445)
-ret, frame = cap.read()
+_, frame = cap.read()
 process(frame)
 cv.imshow('output', frame)
 cv.waitKey()
 
 cap.set(1, 670)
-ret, frame = cap.read()
+_, frame = cap.read()
 process(frame)
 cv.imshow('output', frame)
 cv.waitKey()
 
 cap.set(1, 895)
-ret, frame = cap.read()
+_, frame = cap.read()
 process(frame)
 cv.imshow('output', frame)
 cv.waitKey()

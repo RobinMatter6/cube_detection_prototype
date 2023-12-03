@@ -2,7 +2,11 @@ from enum import Enum
 
 
 class Color(Enum):
-    NONE = 1
-    BLUE = 2
-    RED = 3
-    YELLOW = 4
+    UNDEFINED = "undefined"
+    NONE = ""
+    BLUE = "blue"
+    RED = "red"
+    YELLOW = "yellow"
+
+    def __str__(self):
+        return self.value

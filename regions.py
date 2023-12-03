@@ -1,7 +1,11 @@
+from datetime import datetime
+
 import cv2 as cv
 import numpy as np
+import requests
 
 from models.color import Color
+from models.direction import Direction
 
 
 def get_img_with_color(img, lower_color, upper_color):
@@ -45,70 +49,70 @@ def get_color(img):
     return Color.NONE
 
 
-def get_positions(img):
+def get_positions(img, direction, config):
     upper_left = img[260:330, 750:820]
     lower_left = img[410:460, 750:820]
 
     upper_right = img[260:330, 1100:1170]
     lower_right = img[410:460, 1100:1170]
 
-    print("UPPER LEFT", get_color(upper_left))
-    print("LOWER LEFT", get_color(lower_left))
-    print("UPPER RIGHT", get_color(upper_right))
-    print("LOWER RIGHT", get_color(lower_right))
+    lower_left_color = get_color(lower_left)
+    if direction == direction.FRONT:
+        config[3] = lower_left_color
+    if direction == direction.RIGHT:
+        config[0] = lower_left_color
+
+    upper_left_color = get_color(upper_left)
+    if direction == direction.FRONT:
+        config[7] = upper_left_color
+    if direction == direction.RIGHT:
+        config[4] = upper_left_color
+
+    lower_right_color = get_color(lower_right)
+    if direction == direction.FRONT:
+        config[1] = lower_right_color
+    if direction == direction.RIGHT:
+        config[2] = lower_right_color
+
+    upper_right_color = get_color(upper_right)
+    if direction == direction.FRONT:
+        config[5] = upper_right_color
+    if direction == direction.RIGHT:
+        config[6] = upper_right_color
+
+    return config
 
 
 cap = cv.VideoCapture('assets/pren_cube_01.mp4')
 
-# pren_cube_01.mp4
-#cap.set(1, 110)
-#cap.set(1, 330)
-#cap.set(1, 560)
-#cap.set(1, 895)
-
-# pren_cube_02.mp4
-#cap.set(1, 325)
-#cap.set(1, 660)
-#cap.set(1, 885)
-
+config = [Color.UNDEFINED] * 8
 
 cap.set(1, 102)
-ret, frame = cap.read()
-get_positions(frame)
-cv.imshow('output', frame)
-cv.waitKey()
+_, frame = cap.read()
+config = get_positions(frame, Direction.FRONT, config)
 
 cap.set(1, 325)
 _, frame = cap.read()
-get_positions(frame)
-cv.imshow('output', frame)
-cv.waitKey()
+config = get_positions(frame, Direction.RIGHT, config)
 
-cap.set(1, 548)
-_, frame = cap.read()
-get_positions(frame)
-cv.imshow('output', frame)
-cv.waitKey()
+url = "http://18.192.48.168:5000/cubes/team05"
+headers = {
+    "Content-Type": "application/json",
+    "Auth": "test1234"
+}
+body = {
+    'time': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    'config': {
+        '1': str(config[0]),
+        '2': str(config[1]),
+        '3': str(config[2]),
+        '4': str(config[3]),
+        '5': str(config[4]),
+        '6': str(config[5]),
+        '7': str(config[6]),
+        '8': str(config[7]),
+    }
+}
 
-cap.set(1, 771)
-_, frame = cap.read()
-get_positions(frame)
-cv.imshow('output', frame)
-cv.waitKey()
-
-#cv.line(frame, (0, 260), (2000, 260), (255, 255, 255), 1)
-#cv.line(frame, (0, 330), (2000, 330), (255, 255, 255), 1)
-
-
-#cv.line(frame, (0, 410), (2000, 410), (255, 0, 255), 1)
-#cv.line(frame, (0, 460), (2000, 460), (255, 0, 255), 1)
-
-
-#cv.line(frame, (750, 0), (750, 2000), (255, 255, 0), 1)
-#cv.line(frame, (820, 0), (820, 2000), (255, 255, 0), 1)
-
-#cv.line(frame, (1100, 0), (1100, 2000), (255, 255, 0), 1)
-#cv.line(frame, (1170, 0), (1170, 2000), (255, 255, 0), 1)
-
-cv.imshow('output', frame)
-cv.waitKey()
+response = requests.post(url, json=body, headers=headers)
+print(response.status_code)
